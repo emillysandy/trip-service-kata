@@ -1,30 +1,27 @@
 "use strict";
 
-let UserSession = require('./UserSession');
-let TripDAO = require('./TripDAO');
-
 class TripService {
     getTripsByUser(user) {
-        let tripList = [];
-        let loggedUser = UserSession.getLoggedUser();
-        let isFriend = false;
-        if (loggedUser != null) {
-            let friends = user.getFriends();
-            for (let i=0; i < friends.length; i++) {
-                let friend = friends[i];
-                if (friend == loggedUser) {
-                    isFriend = true;
-                    break;
-                }
-            };
-            if (isFriend) {
-                tripList = TripDAO.findTripsByUser(user);
-            }
-            return tripList;
+        const loggedUser = UserSession.getLoggedUser();
+
+        if (isUserLoggedIn()) {
+            return getTripsIfUserIsFriend(user, loggedUser);
         } else {
             throw new Error('User not logged in.');
         }
     }
 }
 
-module.exports = TripService
+function isUserLoggedIn() {
+    return UserSession.getLoggedUser() !== null;
+}
+
+function isUserFriend(user, loggedUser) {
+    return user.getFriends().includes(loggedUser);
+}
+
+function getTripsIfUserIsFriend(user, loggedUser) {
+    return isUserFriend(user, loggedUser) ? TripDAO.findTripsByUser(user) : [];
+}
+
+module.exports = TripService;
